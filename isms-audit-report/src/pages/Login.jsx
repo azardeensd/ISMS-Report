@@ -42,14 +42,19 @@ const Login = () => {
   return (
     <div style={{ 
       display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: '#2958f3ff'
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: '100vh',
+  backgroundColor: '#0e2983ff', // Fallback color
+  backgroundImage: 'url(/images/ISMSPoster.png)',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'center center',
+  backgroundAttachment: 'fixed',
+  backgroundSize: 'cover'
     }}>
       <Card
         title={<span style={{ fontWeight: 'bold', fontSize: '24px' }}>ISMS Audit Report</span>}
-        style={{ width: 500 }}
+        style={{ width: 500, padding: 10, borderRadius: 48, boxShadow: '0 90px 8px rgba(16, 15, 15, 0.1)' }}
       >
         <Form onFinish={onLogin}>
           <Form.Item

@@ -38,6 +38,7 @@ function AppContent() {
         <Route element={<ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']} />}>
           <Route path="/admin/*" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="audit" element={<Audits />} />
             <Route path="manage-users" element={<ManageUsers />} />
           </Route>
         </Route>

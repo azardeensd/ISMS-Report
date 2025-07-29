@@ -170,20 +170,32 @@ app.get('/api/admin/users',
 
 // Add new user by admin
 app.post('/api/admin/users', async (req, res) => {
+  let sqlConnection;
   try {
+    console.log('Adding user:', req.body);
     const { UserID, Username, PasswordHash, Email, Role } = req.body;
-    // Hash password if needed
+    
+    // Hash password if needed (recommended)
     // const hashedPassword = await bcrypt.hash(PasswordHash, 10);
-    await sql.connect(config);
-    await sql.query`
-      INSERT INTO Users (UserID, Username, PasswordHash, Email, Role)
-      VALUES (${UserID}, ${Username}, ${PasswordHash}, ${Email}, ${Role})
+    
+    sqlConnection = await sql.connect(config);
+    const result = await sqlConnection.query`
+      INSERT INTO Users ( Username, PasswordHash, Email, Role)
+      VALUES (${Username}, ${PasswordHash}, ${Email}, ${Role})
     `;
-    res.json({ success: true });
+    
+    res.status(201).json({ success: true, message: 'User added successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to add user' });
+    console.error('Error adding user:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to add user',
+      error: err.message 
+    });
   } finally {
-    sql.close();
+    if (sqlConnection) {
+      await sqlConnection.close();
+    }
   }
 });
 
@@ -214,6 +226,56 @@ app.post('/audit/import', upload.single('excelFile'), async (req, res) => {
     res.status(500).json({ error: 'Import failed' });
   } finally {
     sql.close();
+  }
+});
+app.post('/api/admin/users/import', async (req, res) => {
+  let sqlConnection;
+  try {
+    const users = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ message: 'Invalid data format' });
+    }
+
+    sqlConnection = await sql.connect(config);
+    const transaction = new sql.Transaction(sqlConnection);
+    await transaction.begin();
+
+    try {
+      let insertedCount = 0;
+      for (const user of users) {
+        const { UserID, Username, PasswordHash, Email, Role } = user;
+        
+        // Hash password if needed
+        // const hashedPassword = await bcrypt.hash(PasswordHash, 10);
+        
+        await transaction.request().query`
+          INSERT INTO Users (UserID, Username, PasswordHash, Email, Role)
+          VALUES (${UserID}, ${Username}, ${PasswordHash}, ${Email}, ${Role})
+        `;
+        insertedCount++;
+      }
+
+      await transaction.commit();
+      res.status(201).json({ 
+        success: true, 
+        insertedCount,
+        message: 'Users imported successfully' 
+      });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (err) {
+    console.error('Error importing users:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to import users',
+      error: err.message 
+    });
+  } finally {
+    if (sqlConnection) {
+      await sqlConnection.close();
+    }
   }
 });
 

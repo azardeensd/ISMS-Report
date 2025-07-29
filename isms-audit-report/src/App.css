@@ -89,3 +89,7 @@
   color: #1890ff;
   border-bottom: 2px solid #1890ff;
 }
+.submit-button:hover {
+  background: linear-gradient(90deg, #0e2983, #1890ff) !important;
+  transform: translateY(-1px) !important;
+}
